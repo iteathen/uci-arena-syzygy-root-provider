@@ -1,0 +1,65 @@
+{
+  "schema": "uci_arena_root_knowledge_contract_v2",
+  "version": "2.0.0",
+  "state": "unsigned-source-candidate",
+  "owner": "offline-root-tablebase-provider",
+  "authority": "provider-owned-interface-bytes; original uci_knowledge_sources_v1 1.4 governs result semantics",
+  "transport": {
+    "schema": "uci_arena_syzygy_root_transport_v1",
+    "framing": "UTF-8 JSON-lines",
+    "operations": ["describe", "probe", "cancel", "close"],
+    "worker_count": 1,
+    "ticket_capacity": 2,
+    "maximum_frame_bytes": 262208,
+    "maximum_output_bytes": 1048576,
+    "output_queue_capacity": 8,
+    "output_queue_byte_capacity": 2097152
+  },
+  "request": {
+    "schema": "uci_arena_syzygy_root_request_v2",
+    "fields": ["schema", "request_id", "root_fence", "position", "legal_moves", "searchmoves", "rules", "history_mode", "limits"],
+    "maximum_bytes": 262144,
+    "maximum_replay_actions": 4096,
+    "maximum_legal_moves": 256,
+    "maximum_nodes": 16384,
+    "maximum_depth": 128,
+    "maximum_milliseconds": 1000,
+    "fence": "opaque128-lowercase-hex",
+    "rules_fields": ["rule50", "repetition", "claim_policy"],
+    "claim_policies": {
+      "adjudicated-claims-as-draw": {"rule50": [true, false]},
+      "orthodoxy-live-claims-v1": {"rule50": [true], "automatic_repetition": 5, "automatic_halfmoves": 150, "virtual_claim_move": false}
+    }
+  },
+  "result": {
+    "schema": "uci_arena_syzygy_root_result_v2",
+    "statuses": ["miss", "not_applicable", "deferred", "safety_only", "exact"],
+    "result_classes": {"win": 1, "draw": 0, "loss": -1},
+    "binding_fields": ["request_id", "root_fence", "request_sha256", "provider_generation", "provider_identity", "sequence", "rules"],
+    "sequence": [0, 1],
+    "distance_metric": "reversible-minimax-plies-to-zeroing-or-mate",
+    "raw_safety_is_exact": false,
+    "virtual_claim_reason": "claim_action_required",
+    "consumer_must_discard_on_abandon_or_binding_change": true
+  },
+  "launch": {
+    "executable": "python/python.exe",
+    "arguments": ["-I", "-B", "app/run_provider.py", "--config", "<registered-cold-config>", "--inventory", "package-manifest.json", "--expected-manifest-sha256", "<admitted-package-sha256>"],
+    "working_directory": ".",
+    "package_inventory_schema": "uci_arena_root_provider_package_v1",
+    "configuration_schema": "uci_arena_syzygy_root_configuration_v1",
+    "cold_launch_deadline_owned_by_consumer": true
+  },
+  "capabilities": {
+    "root_only": true,
+    "maximum_admitted_pieces": 6,
+    "network": false,
+    "active_gpu_leaf_callback": false,
+    "canonical_engine_state_mutation": false,
+    "neural_evaluation": false,
+    "signed_installation": false,
+    "vector_consumer_qualification": false,
+    "full_live_dataset_qualification": false
+  },
+  "documentation": "root-only-contract-v2.md"
+}
