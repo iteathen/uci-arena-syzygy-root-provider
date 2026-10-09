@@ -1,0 +1,124 @@
+{
+  "name": "Syzygy root provider candidate",
+  "on": {
+    "pull_request": {},
+    "push": {
+      "branches": ["main"]
+    },
+    "workflow_dispatch": {
+      "inputs": {
+        "archive_sha256": {
+          "type": "string",
+          "required": true,
+          "description": "Exact atomic component archive SHA256"
+        },
+        "client_sha256": {
+          "type": "string",
+          "required": true,
+          "description": "Current08 actual managed root client receipt SHA256"
+        },
+        "warming_sha256": {
+          "type": "string",
+          "required": true,
+          "description": "Current08 actual full-selection cold cancellation receipt SHA256"
+        }
+      }
+    }
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "concurrency": {
+    "group": "syzygy-provider-${{ github.sha }}",
+    "cancel-in-progress": false
+  },
+  "jobs": {
+    "verify": {
+      "runs-on": "windows-latest",
+      "timeout-minutes": 5,
+      "steps": [
+        {
+          "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "with": {
+            "fetch-depth": 0,
+            "persist-credentials": false
+          }
+        },
+        {
+          "uses": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "with": {
+            "node-version": "26.11.1"
+          }
+        },
+        {
+          "name": "Portable component/release admission tests",
+          "run": "node --test test/*.test.mjs"
+        }
+      ]
+    },
+    "sign": {
+      "needs": "verify",
+      "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'",
+      "runs-on": "windows-latest",
+      "timeout-minutes": 15,
+      "permissions": {
+        "contents": "write",
+        "id-token": "write"
+      },
+      "env": {
+        "ARCHIVE_SHA": "${{ inputs.archive_sha256 }}",
+        "CLIENT_SHA": "${{ inputs.client_sha256 }}",
+        "WARMING_SHA": "${{ inputs.warming_sha256 }}",
+        "WORKFLOW_IDENTITY": "${{ github.workflow_ref }}#${{ github.run_id }}.${{ github.run_attempt }}"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "with": {
+            "fetch-depth": 0,
+            "persist-credentials": false
+          }
+        },
+        {
+          "uses": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "with": {
+            "node-version": "26.11.1"
+          }
+        },
+        {
+          "name": "Read exact private draft intake",
+          "shell": "pwsh",
+          "env": {
+            "GH_TOKEN": "${{ github.token }}"
+          },
+          "run": "$ErrorActionPreference = 'Stop'\nif ($env:GITHUB_REPOSITORY -ne 'iteathen/uci-arena-syzygy-root-provider' -or $env:GITHUB_REF -ne 'refs/heads/main' -or $env:GITHUB_EVENT_NAME -ne 'workflow_dispatch' -or $env:GITHUB_SHA -notmatch '^[a-f0-9]{40}$') { throw 'Wrong owner/source invocation' }\nforeach ($digest in @($env:ARCHIVE_SHA,$env:CLIENT_SHA,$env:WARMING_SHA)) { if ($digest -notmatch '^[a-f0-9]{64}$') { throw 'Invalid digest' } }\n$taskRoot = Join-Path $env:RUNNER_TEMP 'syzygy-provider-delivery'\nNew-Item -ItemType Directory -Path $taskRoot -ErrorAction Stop | Out-Null\ngh api \"repos/$env:GITHUB_REPOSITORY\" --jq '{full_name,private,visibility}' | Set-Content -LiteralPath (Join-Path $taskRoot 'repo.json') -Encoding utf8\nif ($LASTEXITCODE -ne 0) { throw 'Repository identity unavailable' }\n$tag = \"intake/syzygy.root-provider/v2.1.0/windows-x86_64/$env:GITHUB_SHA\"\n$encodedTag = [uri]::EscapeDataString($tag)\ngh api \"repos/$env:GITHUB_REPOSITORY/releases/tags/$encodedTag\" --jq '{id,draft,tag_name,target_commitish,assets:[.assets[]|{id,name,size,digest}]}' | Set-Content -LiteralPath (Join-Path $taskRoot 'release.json') -Encoding utf8\nif ($LASTEXITCODE -ne 0) { throw 'Exact draft intake unavailable' }\n$metadata = @{repository=(Get-Content -Raw -LiteralPath (Join-Path $taskRoot 'repo.json')|ConvertFrom-Json);release=(Get-Content -Raw -LiteralPath (Join-Path $taskRoot 'release.json')|ConvertFrom-Json)}\n$metadata | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $taskRoot 'metadata.json') -Encoding utf8\nnode tools/component-cli.mjs inspect-intake --metadata (Join-Path $taskRoot 'metadata.json') --source-commit $env:GITHUB_SHA --archive-sha256 $env:ARCHIVE_SHA --client-sha256 $env:CLIENT_SHA --warming-sha256 $env:WARMING_SHA\nif ($LASTEXITCODE -ne 0) { throw 'Intake source/receipt/archive identity rejected' }\ngh release download $tag --repo $env:GITHUB_REPOSITORY --dir (Join-Path $taskRoot 'input')\nif ($LASTEXITCODE -ne 0 -or @(Get-ChildItem -LiteralPath (Join-Path $taskRoot 'input') -File).Count -ne 3) { throw 'Exact intake download failed' }"
+        },
+        {
+          "name": "Validate source/native receipt scope and stage unchanged archive",
+          "shell": "pwsh",
+          "run": "$ErrorActionPreference = 'Stop'\n$taskRoot = Join-Path $env:RUNNER_TEMP 'syzygy-provider-delivery'\n$base = 'syzygy.root-provider-2.1.0-windows-x86_64'\nnode tools/component-cli.mjs stage --archive (Join-Path $taskRoot \"input/$base.tar.gz\") --client (Join-Path $taskRoot \"input/$base.client-observation.json\") --warming (Join-Path $taskRoot \"input/$base.warming-observation.json\") --metadata (Join-Path $taskRoot 'metadata.json') --source-commit $env:GITHUB_SHA --archive-sha256 $env:ARCHIVE_SHA --client-sha256 $env:CLIENT_SHA --warming-sha256 $env:WARMING_SHA --workflow-identity $env:WORKFLOW_IDENTITY --output (Join-Path $taskRoot 'provider') | Set-Content -LiteralPath (Join-Path $taskRoot 'stage.json') -Encoding utf8\nif ($LASTEXITCODE -ne 0) { throw 'Current concrete source/client/warming gates failed' }"
+        },
+        {
+          "name": "Install pinned Cosign",
+          "uses": "sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6",
+          "with": {
+            "cosign-release": "v3.0.6"
+          }
+        },
+        {
+          "name": "Sign and independently verify full provider predicate",
+          "shell": "pwsh",
+          "run": "$ErrorActionPreference = 'Stop'\n$taskRoot = Join-Path $env:RUNNER_TEMP 'syzygy-provider-delivery'\n$record = Get-Content -Raw -LiteralPath (Join-Path $taskRoot 'stage.json') | ConvertFrom-Json\ncosign attest-blob --yes --statement $record.statementPath --bundle $record.bundlePath\nif ($LASTEXITCODE -ne 0) { throw 'Signing failed' }\ncosign verify-blob-attestation --bundle $record.bundlePath --certificate-identity \"https://github.com/$env:GITHUB_WORKFLOW_REF\" --certificate-oidc-issuer https://token.actions.githubusercontent.com --certificate-github-workflow-repository $env:GITHUB_REPOSITORY --certificate-github-workflow-sha $env:GITHUB_SHA --certificate-github-workflow-name $env:GITHUB_WORKFLOW --certificate-github-workflow-ref $env:GITHUB_REF --certificate-github-workflow-trigger $env:GITHUB_EVENT_NAME --type https://uci-arena.example/attestations/provider-release-result/v1 --new-bundle-format $record.artifactPath\nif ($LASTEXITCODE -ne 0) { throw 'Signature/source/issuer/log proof rejected' }\nnode tools/component-cli.mjs verify-statement --bundle $record.bundlePath --statement $record.statementPath\nif ($LASTEXITCODE -ne 0) { throw 'Complete attested predicate differs' }"
+        },
+        {
+          "name": "Create private draft output only",
+          "shell": "pwsh",
+          "env": {
+            "GH_TOKEN": "${{ github.token }}"
+          },
+          "run": "$ErrorActionPreference = 'Stop'\n$taskRoot = Join-Path $env:RUNNER_TEMP 'syzygy-provider-delivery'\n$record = Get-Content -Raw -LiteralPath (Join-Path $taskRoot 'stage.json') | ConvertFrom-Json\n$tag = 'component/syzygy.root-provider/v2.1.0/windows-x86_64'\ngh release view $tag --repo $env:GITHUB_REPOSITORY *> $null\nif ($LASTEXITCODE -eq 0) { throw 'Existing candidate cannot be replaced' }\ngh release create $tag $record.artifactPath $record.resultPath $record.bundlePath --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --draft --prerelease --title 'Syzygy root provider 2.1.0 windows-x86_64' --notes 'Private reviewed atomic provider candidate; no tablebase data, no full-six ranking or suite installation authority. Repository/output remain private/draft.'\nif ($LASTEXITCODE -ne 0) { throw 'Private draft output creation failed' }"
+        }
+      ]
+    }
+  }
+}

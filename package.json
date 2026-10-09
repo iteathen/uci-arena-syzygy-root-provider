@@ -1,0 +1,8 @@
+{
+  "name": "@uci-arena/syzygy-root-provider-release-tools",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=26.11.1 <27"},
+  "scripts": {"test": "node --test test/*.test.mjs"}
+}
