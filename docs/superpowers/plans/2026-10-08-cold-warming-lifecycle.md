@@ -23,3 +23,12 @@ The full1020-file selection publishes warming without dataset authority in
 These timings are two lifecycle observations, not a latency population gate.
 Receipts remain in the owned provider tools root; dataset-ready/full-ranking,
 Vector integration, managed signing and production acceptance remain separate.
+
+Independent review found an inherited manifest read/stamp race. Admission now
+retains the pre-read regular-file stamp, checks it immediately after reading,
+and keeps that same stamp through final admission and subsequent use. A real
+file replacement immediately after the pinned read was observed RED (no
+DatasetError), then GREEN; all64 source tests pass on the same pinned runtime.
+The follow-up candidate inventory is rebuilt separately. The v2-07 native
+receipts above remain historical evidence for their original source bytes;
+this source repair does not relabel them or add a dataset-ready/native claim.

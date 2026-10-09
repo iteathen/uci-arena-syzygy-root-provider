@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 from dataset import admit_dataset, DatasetError, AdmissionCancelled, digest
 
 
@@ -38,6 +39,17 @@ class DatasetTests(unittest.TestCase):
         with self.assertRaises(AdmissionCancelled):
             digest(path, cancelled=cancelled)
         self.assertEqual(len(checks), 3)
+    def test_manifest_replacement_after_read_cannot_adopt_a_later_stamp(self):
+        manifest = self.root / 'syzygy_manifest_v1.json'
+        read_bytes = Path.read_bytes
+        def replace_after_read(path):
+            data = read_bytes(path)
+            if path == manifest:
+                path.write_bytes(b'changed manifest after pinned read')
+            return data
+        with patch.object(Path, 'read_bytes', replace_after_read):
+            with self.assertRaises(DatasetError):
+                admit_dataset(self.root, ['KQvK.rtbw'], self.manifest_sha)
     def test_cancelled_admission_never_returns_an_identity(self):
         with self.assertRaises(AdmissionCancelled):
             admit_dataset(self.root, ['KQvK.rtbw'], self.manifest_sha, cancelled=lambda: True)

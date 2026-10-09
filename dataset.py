@@ -118,9 +118,13 @@ def admit_dataset(root, selected, expected_manifest_sha256, *, cancelled=lambda:
         regular(directory, directory=True)
     manifest_path = root / "syzygy_manifest_v1.json"
     manifest_stat = regular(manifest_path)
+    manifest_state = (manifest_stat.st_dev, manifest_stat.st_ino, manifest_stat.st_size,
+                      manifest_stat.st_mtime_ns, manifest_stat.st_ctime_ns)
     if manifest_stat.st_size > 1048576:
         raise DatasetError("manifest byte capacity")
     data = manifest_path.read_bytes()
+    if stamp(manifest_path) != manifest_state:
+        raise DatasetError("manifest changed during admission")
     manifest_sha = hashlib.sha256(data).hexdigest()
     if not isinstance(expected_manifest_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_manifest_sha256) or expected_manifest_sha256 != manifest_sha:
         raise DatasetError("manifest identity mismatch")
@@ -132,7 +136,7 @@ def admit_dataset(root, selected, expected_manifest_sha256, *, cancelled=lambda:
         selected = [row.get("name") for row in rows if type(row) is dict]
     if type(selected) is not list or not 1 <= len(selected) <= 2048 or any(not isinstance(name, str) for name in selected) or len(set(selected)) != len(selected):
         raise DatasetError("bounded unique explicit members required")
-    files, states, cardinality, total = [], {manifest_path: stamp(manifest_path)}, 0, 0
+    files, states, cardinality, total = [], {manifest_path: manifest_state}, 0, 0
     for name in selected:
         cancellation_point(cancelled)
         match = re.fullmatch(r"(K[QRBNP]*vK[QRBNP]*)\.(rtbw|rtbz)", name)
