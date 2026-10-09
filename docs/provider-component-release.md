@@ -75,8 +75,12 @@ The current client receipt schema is
 `ready-advance-two-game-managed-KQ-root-only`. Its status is pass, with
 timingQualified/fullDatasetQualified false. It carries exact providerSelection
 {componentId,componentVersion,innerManifestSha256,contractSha256,providerSource},
-frozen Vector sourceRevision, actual Node26.11.1 executable digest, bindingSha256
-and configurationSha256. Publication is tablebase-exact-root with actual action,
+frozen Vector sourceRevision, actual Node26.11.1 executable `node.sha256`,
+`bindingBytesSha256` and `bindingCanonicalSha256`, and separate configuration
+file-byte `configuration.sha256` and canonical `configuration.canonicalSha256`
+digests. The v2 binding's canonical configuration digest must agree. No duplicate
+top-level draft identity fields substitute for these actual driver facts.
+Publication is tablebase-exact-root with actual action,
 requestSHA, canonical four-word root fence and same provider generation through
 normal provider close. The actual selected action is in copied legal actions and
 legalProof/focus agree. Two distinct actual arenas join with quiescence, accepted
@@ -92,6 +96,9 @@ configuration_sha256}. Warming describe owns no dataset-ready identity; deferred
 probes own no safety/exact result. It explicitly keeps dataset_ready_qualification
 and vector_consumer_qualification false. This demonstrates cancellation while
 hashing the declared selection, not full-six readiness/ranking or table copying.
+The separately retained raw receipt and execution logs bind c254 source, the
+actual Python executable, config byte/canonical digests, the issued request and
+matching per-process generations, and normally settled driver/owner closure.
 
 Missing, fixture, historical or substituted records reject signing. These
 checks consume retained public owner facts; they do not manufacture physical
@@ -106,7 +113,8 @@ the atomic archive and current client/warming receipts. Intake tag is
 `intake/syzygy.root-provider/v2.1.0/windows-x86_64/<full-source-sha>`, target exact
 source SHA; asset IDs, digest, size and exact names are inspected before download.
 
-The manual-main-only workflow pins checkout/setup-node/Cosign actions and uses
+Read-only verification runs for pull requests and main pushes. Signing remains
+manual-main-only. The workflow pins checkout/setup-node/Cosign actions and uses
 Node26.11.1/Cosign3.0.6. It validates the unchanged archive, clean actual source,
 frozen inner package and current raw native gates, constructs the full generic
 `arena_provider_release_result_v1`, signs its complete in-toto predicate, verifies
@@ -121,3 +129,9 @@ There are no automatic privileged triggers or publication steps. No workflow
 dispatch, intake upload, signature, public release or install occurs in source
 preparation. Hosted/private runner capacity is an execution prerequisite; root
 may select an existing reviewed local-ephemeral runner route separately.
+
+Private repository branch protection is unavailable on the current account
+capability (GitHub returned403 for main protection). This route does not claim
+protected main, change visibility or request an account upgrade. Review uses
+fresh read-only CI, clean exact source SHA, independent source review and an
+expected-head merge; release invocation remains bound to that exact main SHA.

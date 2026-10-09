@@ -1,6 +1,10 @@
 {
   "name": "Syzygy root provider candidate",
   "on": {
+    "pull_request": {},
+    "push": {
+      "branches": ["main"]
+    },
     "workflow_dispatch": {
       "inputs": {
         "archive_sha256": {
