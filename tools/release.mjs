@@ -1,8 +1,8 @@
 import {isDeepStrictEqual} from 'node:util';
-const repository='iteathen/uci-arena-syzygy-root-provider',base='syzygy.root-provider-2.1.0-windows-x86_64',hex=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),positive=v=>Number.isSafeInteger(v)&&v>0;
+const repository='iteathen/uci-arena-syzygy-root-provider',base='syzygy.root-provider-2.1.1-windows-x86_64',hex=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),positive=v=>Number.isSafeInteger(v)&&v>0;
 export function inspectDraftIntake(metadata,{sourceCommit,archiveSha256,clientSha256,warmingSha256}){
  if(metadata?.repository?.full_name!==repository||metadata.repository.private!==true||metadata.repository.visibility!=='private'||!/^[a-f0-9]{40}$/.test(sourceCommit)||[archiveSha256,clientSha256,warmingSha256].some(v=>!hex(v)))throw Error('private owner/source intake identity');
- const tag=`intake/syzygy.root-provider/v2.1.0/windows-x86_64/${sourceCommit}`;let r=metadata.release;
+ const tag=`intake/syzygy.root-provider/v2.1.1/windows-x86_64/${sourceCommit}`;let r=metadata.release;
  if(Object.hasOwn(metadata,'releases')){if(Object.hasOwn(metadata,'release')||!Array.isArray(metadata.releases)||metadata.releases.length>50)throw Error('bounded draft intake listing');const matches=metadata.releases.filter(v=>v?.tag_name===tag);if(matches.length!==1)throw Error('unique draft intake selection');r=matches[0];}
  if(!positive(r?.id)||r.draft!==true||r.target_commitish!==sourceCommit||r.tag_name!==tag||!Array.isArray(r.assets)||r.assets.length!==3)throw Error('draft intake identity');
  for(const [name,digest]of [[base+'.tar.gz',archiveSha256],[base+'.client-observation.json',clientSha256],[base+'.warming-observation.json',warmingSha256]]){const rows=r.assets.filter(a=>a.name===name);if(rows.length!==1||!positive(rows[0].id)||!positive(rows[0].size)||rows[0].size>536870912||rows[0].digest!=='sha256:'+digest)throw Error('exact intake asset identity');}return r;

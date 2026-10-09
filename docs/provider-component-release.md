@@ -1,9 +1,12 @@
 # Atomic offline root-provider component
 
-Status: source and unsigned mechanical staging candidate. This release route
-has not run remotely, signed anything or installed a component. Current08
-managed-client and cold-cancellation evidence remains a required external gate.
-Historical07 native receipts retain their old exact package/source scope.
+Status: outer install2.1.1 source candidate; not yet signed or installed.
+The preserved signed private draft2.1.0 failed actual Installer97 manifest
+admission: its unnecessary discovery kind is unsupported, and contract_manifest
+incorrectly labels the root-knowledge protocol as a Manager/service contract.
+It remains historical, rejected for setup admission, with all original bytes and
+signatures preserved. Current08 inner-native receipts retain their exact scope;
+they are not relabeled as outer2.1.1 installation proof.
 
 Account repository metadata was inventoried before selecting a new owner. None
 owns this independent external root-provider mission. Engine/Vector repositories
@@ -14,7 +17,9 @@ signing and release adoption remain separately reviewed owner transitions.
 
 ## Stable inner package and outer layout
 
-Component id/version/target are `syzygy.root-provider`/`2.1.0`/`windows-x86_64`.
+Outer component id/install-version/target are
+`syzygy.root-provider`/`2.1.1`/`windows-x86_64`. The explicit selected
+`inner_service_version` remains `2.1.0`.
 The inner manifest SHA is
 `942b7552dbe28479cf1fa08c45e439ab50546f8efac1e9551ebda770a5e3484f`.
 The public2.1.0 locator SHA is
@@ -25,8 +30,10 @@ The inner package rejects uninventoried files, so it lives under `runtime/`,
 containing only its54 members plus package-manifest.json. `arena-component.json`
 and outer metadata/source archive stay outside that subtree. The mechanical
 outer inventory covers every actual byte, without maintained per-file GUIDs.
-It exposes file entrypoints for Python, script, locator, inner inventory and
-layout metadata, plus generic discovery at component_path `runtime`.
+It exposes file entrypoints for Python, script, root-knowledge protocol, inner
+inventory and layout metadata. It claims no Installer discovery or Manager
+service-contract role. The protocol is an entrypoint and the layout's
+launch_contract, not Installer's service-only contract_manifest.
 
 The consumer's optional dependency binding is exactly:
 
@@ -86,6 +93,11 @@ normal provider close. The actual selected action is in copied legal actions and
 legalProof/focus agree. Two distinct actual arenas join with quiescence, accepted
 128-bit cancel, balanced leases, first stop2/drain0 and driver live/orphan0.
 Provider close must be drained/nonfailed with process code0/no signal/no force.
+Its providerSelection.componentVersion denotes the frozen inner2.1.0 service
+selection, not the patched outer installation version. Exact942b/0c386/c254
+bindings and the byte-identical54-file runtime justify reuse as inner evidence.
+Actual outer manifest admission is independently exercised through Installer97
+read-only verify with synthetic receipt fixtures; no apply or service start.
 
 The separately current full-selection warming receipt schema is
 `uci_arena_root_provider_warming_observation_v1`. It pins current942b package,
@@ -110,7 +122,7 @@ remain independently retained and root-reviewed.
 GitHub does not offer ordinary PAT upload to workflow artifacts. The owner
 therefore stages exactly three assets in a SAME private repository draft intake:
 the atomic archive and current client/warming receipts. Intake tag is
-`intake/syzygy.root-provider/v2.1.0/windows-x86_64/<full-source-sha>`, target exact
+`intake/syzygy.root-provider/v2.1.1/windows-x86_64/<full-source-sha>`, target exact
 source SHA; asset IDs, digest, size and exact names are inspected before download.
 GitHub's by-tag endpoint returned404 for the actual private draft. Intake is
 therefore selected uniquely from at most50 authenticated release records, then
@@ -127,7 +139,7 @@ issuer/certificate/repository/source/workflow/ref/trigger/transparency proof,
 then compares the entire verified DSSE payload. This is the Installer's public
 provider provenance contract, not a new trust mechanism.
 
-Output tag `component/syzygy.root-provider/v2.1.0/windows-x86_64` stays private,
+Output tag `component/syzygy.root-provider/v2.1.1/windows-x86_64` stays private,
 DRAFT and prerelease. Replacement is forbidden. Only archive/result/Sigstore
 bundle are exposed; no source workspace or dataset is an Installer input.
 There are no automatic privileged triggers or publication steps. No workflow
