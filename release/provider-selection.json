@@ -1,0 +1,15 @@
+{
+  "schema": "syzygy_root_provider_component_selection_v1",
+  "component_id": "syzygy.root-provider",
+  "version": "2.1.0",
+  "target": "windows-x86_64",
+  "repository": "iteathen/uci-arena-syzygy-root-provider",
+  "snapshot_commit": "c254e225219f4805f3997e967000b4d802556282",
+  "inner_manifest_sha256": "942b7552dbe28479cf1fa08c45e439ab50546f8efac1e9551ebda770a5e3484f",
+  "contract_sha256": "0c3863989e3fd596e4216f029b8ad691a04dd499daf563828a819b0bc72be83a",
+  "inner_file_count": 54,
+  "source_receipt_sha256": "5a4d1c4604ce6f05b94dd43de361ffd41afd3e3fed33fad285e3f3d4194c52c7",
+  "python_archive_sha256": "97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297",
+  "chess_archive_sha256": "a8b43e5678fdb3000695bdaa573117ad683761e5ca38e591c4826eba6d25bb39",
+  "fixture": false
+}

@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';import {fileURLToPath} from 'node:url';
+test('CLI rejects unknown arguments before any source or output mutation',()=>{const script=fileURLToPath(new URL('../tools/component-cli.mjs',import.meta.url)),r=spawnSync(process.execPath,[script,'unrecognized','--output','forbidden'],{encoding:'utf8',windowsHide:true});assert.equal(r.status,1);assert.match(r.stderr,/Invalid component arguments/);});

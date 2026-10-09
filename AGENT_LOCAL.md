@@ -1,0 +1,25 @@
+# Syzygy root-provider ownership
+
+Canonical global authority is the AGENTS.md link. This independently owned
+provider implements external offline root knowledge through public python-chess;
+it owns its Python process/runtime inventory and atomic Installer component.
+Vector owns canonical chess/GPU search/model state and consumes this provider
+only through the frozen public locator/JSON-lines contracts.
+
+The owner-selected runtime source is c254e225219f4805f3997e967000b4d802556282.
+Do not alter the54-file inner package or historical qualification meanings as
+part of packaging. No active-leaf callback, remote data probing, engine search,
+native-source build, hand PTX, or tablebase-data copy belongs in this task.
+
+Release tools use pinned Node26.11.1 with no package dependency or install script.
+`node --test test/*.test.mjs` qualifies metadata/containment only. The separate
+64-source-test proof and actual current client/warming receipts retain their
+own identities. Never turn fixtures or historical07 receipts into current08
+native evidence. See docs/provider-component-release.md and the committed
+release/provider-selection.json for exact producer-owned bindings.
+
+Repository and candidate releases stay private/draft under current direction.
+No signing/dispatch/public visibility change/installation before independent
+root review and actual current receipt closure. Own-source license is undeclared;
+preserve that fact and actual CPython/GPL source/notices without inventing a grant.
+Never read token/credential/private-key files or runner secret configuration.
