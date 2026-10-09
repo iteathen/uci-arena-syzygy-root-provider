@@ -31,6 +31,32 @@ Direct selection stays inside the completed raw-safe subset. A contradiction bet
 
 ## Transport and lifecycle
 
+Version 2.1.0 adds `uci_arena_root_provider_cold_lifecycle_v1`. After bounded
+package/runtime/configuration admission, ingress runs while a separate cold
+worker hashes the complete selected dataset. `describe.status="warming"`
+contains admitted runtime/package and canonical configuration identity only;
+it has no dataset identity and `readiness.dataset="not-admitted"`. It is not a
+successful tablebase admission. Warming probes receive a transport-v1 deferred
+frame with `reason="provider_warming"`, request id, root fence and provider
+generation, without miss, safety or exact authority. No ticket is created.
+
+Consumers poll the existing describe operation for readiness; no unsolicited
+ready frame or private constructor API is introduced. The same generation
+becomes ready only after exact full hashes, pre/post file stamps, public file
+opening and repeated runtime/configuration identity checks complete. The ready
+description carries the actual admitted file set and `readiness.dataset="admitted"`.
+One process may remain alive across games; ordinary game boundaries do not
+reload its immutable dataset or change its generation.
+
+Close and EOF cancel hashing between 65536-byte reads and between public file
+admissions, join the cold worker, then drain request work before dataset close.
+Close reports closed/drained only after those owners finish. A stalled file read
+or public call can produce `draining`; failed admission/cleanup produces
+`quarantined` and nonzero process disposition. No background owner is declared
+closed merely because no ready dataset was published. Historical 2.0.0/v2-05
+bytes and observations remain unchanged; this capability does not change the
+exhaustive result-v2 proof/ranking profile.
+
 The closed transport envelopes are `{"operation":"describe"}`, `{"operation":"probe","request":<v2 request>}`, `{"operation":"cancel","request_id":<id>,"root_fence":<fence>}`, and `{"operation":"close"}`. Probe events are direct result-v2 objects without an operation wrapper. Cancel has no acknowledgment; consumer abandonment is immediate and in-flight output must be discarded by binding. Close reports separate `drained` and `failed` facts with `closed`, `draining` or `quarantined` disposition; zero exit and EOF are checked separately. Ticket pressure and transport errors supply no proof authority.
 
 The canonical request digest hashes the request object only, using UTF-8, recursively sorted object keys, comma/colon separators without spaces, no ASCII escaping and no nonfinite numbers. The transport wrapper and trailing LF are excluded. `provider_identity.configuration_sha256` hashes the same canonical JSON convention for the admitted cold configuration; this is semantic configuration identity, distinct from the configuration file's exact byte digest.

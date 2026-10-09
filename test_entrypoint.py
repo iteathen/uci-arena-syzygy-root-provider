@@ -1,11 +1,42 @@
 import io
 import json
 import unittest
-from run_provider import admit_config, serve, ConfigurationError
+from run_provider import admit_config, serve, serve_warming, ConfigurationError
 from test_root_contract import request
 
 
 class EntrypointTests(unittest.TestCase):
+    def test_literal_ingress_describe_and_close_before_cold_owner_ready(self):
+        from dataset import AdmissionCancelled
+        import threading
+        entered = threading.Event()
+        def load(cancelled):
+            entered.set()
+            while not cancelled():
+                entered.wait(.001)
+            raise AdmissionCancelled('cancelled')
+        output = io.BytesIO()
+        source = io.BytesIO(b'{"operation":"describe"}\n{"operation":"close"}\n')
+        code = serve_warming({'runtime': {'version': '3.13.16'}}, '5' * 32, load, source, output)
+        self.assertEqual(code, 0)
+        events = [json.loads(row) for row in output.getvalue().splitlines()]
+        self.assertEqual(events[0]['status'], 'warming')
+        self.assertEqual(events[-1]['status'], 'closed')
+        self.assertTrue(events[-1]['drained'])
+    def test_warming_eof_cancels_and_sink_failure_is_not_success(self):
+        from dataset import AdmissionCancelled
+        def load(cancelled):
+            import time
+            while not cancelled():
+                time.sleep(.001)
+            raise AdmissionCancelled('cancelled')
+        class Broken:
+            def write(self, data):
+                raise BrokenPipeError()
+            def flush(self):
+                pass
+        code = serve_warming({}, '6' * 32, load, io.BytesIO(b'{"operation":"describe"}\n'), Broken())
+        self.assertEqual(code, 4)
     def test_real_sink_failure_cannot_report_successful_process_disposition(self):
         class Provider:
             generation = "3" * 32

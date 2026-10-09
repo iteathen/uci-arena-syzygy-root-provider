@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from dataset import admit_dataset, DatasetError
+from dataset import admit_dataset, DatasetError, AdmissionCancelled, digest
 
 
 class DatasetTests(unittest.TestCase):
@@ -28,6 +28,45 @@ class DatasetTests(unittest.TestCase):
         self.assertEqual(result.identity["manifest_cardinality"], 6)
         self.assertEqual(result.identity["files"][0]["sha256"], self.row["sha256"])
         self.assertEqual(result.identity["manifest_sha256"], self.manifest_sha)
+    def test_hash_cancellation_is_checked_between_bounded_reads(self):
+        path = self.root / 'KQvK.rtbw'
+        path.write_bytes(b'x' * 200000)
+        checks = []
+        def cancelled():
+            checks.append(True)
+            return len(checks) == 3
+        with self.assertRaises(AdmissionCancelled):
+            digest(path, cancelled=cancelled)
+        self.assertEqual(len(checks), 3)
+    def test_cancelled_admission_never_returns_an_identity(self):
+        with self.assertRaises(AdmissionCancelled):
+            admit_dataset(self.root, ['KQvK.rtbw'], self.manifest_sha, cancelled=lambda: True)
+    def test_cancelled_open_closes_owner_before_later_members(self):
+        result = admit_dataset(self.root, ['KQvK.rtbw'], self.manifest_sha)
+        class Table:
+            closed = 0
+            def add_file(self, path):
+                raise AssertionError('cancelled before first public add')
+            def close(self):
+                self.closed += 1
+        table = Table()
+        with self.assertRaises(AdmissionCancelled):
+            result.open(lambda: table, cancelled=lambda: True)
+        self.assertEqual(table.closed, 1)
+        self.assertEqual(result.state, 'closed')
+    def test_open_rechecks_all_member_stamps_before_ready(self):
+        result = admit_dataset(self.root, ['KQvK.rtbw'], self.manifest_sha)
+        class Table:
+            closed = 0
+            def add_file(inner, path):
+                Path(path).write_bytes(b'changed during open')
+                return 1
+            def close(inner):
+                inner.closed += 1
+        table = Table()
+        with self.assertRaises(DatasetError):
+            result.open(lambda: table)
+        self.assertEqual(table.closed, 1)
     def test_corruption_digest_drift_duplicate_or_escaping_member_rejected(self):
         for mode in ["bytes", "manifest", "duplicate", "path"]:
             self.write([self.row])

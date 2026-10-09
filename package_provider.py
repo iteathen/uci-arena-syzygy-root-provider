@@ -10,7 +10,7 @@ import zipfile
 
 PYTHON_SHA256 = "97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297"
 CHESS_SHA256 = "a8b43e5678fdb3000695bdaa573117ad683761e5ca38e591c4826eba6d25bb39"
-APPLICATION = ["root_contract.py", "root_provider.py", "dataset.py", "service.py", "transport.py", "runtime_manifest.py", "run_provider.py"]
+APPLICATION = ["root_contract.py", "root_provider.py", "dataset.py", "service.py", "transport.py", "warming.py", "runtime_manifest.py", "run_provider.py"]
 
 
 def sha(path):

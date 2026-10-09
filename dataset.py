@@ -11,6 +11,10 @@ class DatasetError(ValueError):
     pass
 
 
+class AdmissionCancelled(DatasetError):
+    pass
+
+
 def regular(path, *, directory=False):
     info = path.lstat()
     if path.is_symlink() or path.is_junction() or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 1024):
@@ -25,9 +29,20 @@ def stamp(path):
     return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
 
 
-def digest(path):
+def cancellation_point(cancelled):
+    if cancelled():
+        raise AdmissionCancelled('cold admission cancelled')
+
+
+def digest(path, *, cancelled=lambda: False):
+    result = hashlib.sha256()
     with path.open("rb") as source:
-        return hashlib.file_digest(source, "sha256").hexdigest()
+        while True:
+            cancellation_point(cancelled)
+            data = source.read(65536)
+            if not data:
+                return result.hexdigest()
+            result.update(data)
 
 
 class DatasetAdmission:
@@ -45,7 +60,7 @@ class DatasetAdmission:
                 self.state = "quarantined"
                 raise DatasetError("admitted immutable file set changed")
 
-    def open(self, factory=lambda: chess.syzygy.Tablebase(max_fds=4)):
+    def open(self, factory=lambda: chess.syzygy.Tablebase(max_fds=4), *, cancelled=lambda: False):
         self.check_unchanged()
         if self.tablebase is not None:
             raise DatasetError("tablebase already opened")
@@ -53,10 +68,13 @@ class DatasetAdmission:
         self.tablebase = tablebase  # Retain ownership even if admission/cleanup fails.
         try:
             for row in self.identity["files"]:
+                cancellation_point(cancelled)
                 # Public pinned add_file avoids scanning/loading unadmitted peers.
                 loaded = tablebase.add_file(str(self.root / row["name"]))
                 if type(loaded) is not int or loaded != 1:
                     raise DatasetError("public tablebase did not admit declared member")
+            cancellation_point(cancelled)
+            self.check_unchanged()
         except BaseException:
             self.close()
             raise
@@ -91,7 +109,8 @@ class DatasetAdmission:
         self.state = "closed"
 
 
-def admit_dataset(root, selected, expected_manifest_sha256):
+def admit_dataset(root, selected, expected_manifest_sha256, *, cancelled=lambda: False):
+    cancellation_point(cancelled)
     root = Path(root)
     if not root.is_absolute():
         raise DatasetError("explicit absolute dataset root required")
@@ -115,6 +134,7 @@ def admit_dataset(root, selected, expected_manifest_sha256):
         raise DatasetError("bounded unique explicit members required")
     files, states, cardinality, total = [], {manifest_path: stamp(manifest_path)}, 0, 0
     for name in selected:
+        cancellation_point(cancelled)
         match = re.fullmatch(r"(K[QRBNP]*vK[QRBNP]*)\.(rtbw|rtbz)", name)
         if not match:
             raise DatasetError("unsafe or nonstandard member name")
@@ -132,12 +152,13 @@ def admit_dataset(root, selected, expected_manifest_sha256):
         if total > 1099511627776:
             raise DatasetError("dataset byte capacity")
         state = stamp(path)
-        actual = digest(path)
+        actual = digest(path, cancelled=cancelled)
         if actual != row["sha256"] or stamp(path) != state:
             raise DatasetError("member content identity mismatch")
         states[path] = state
         files.append({"name": name, "bytes": before.st_size, "sha256": actual, "pieces": pieces})
         cardinality = max(cardinality, pieces)
+    cancellation_point(cancelled)
     if stamp(manifest_path) != states[manifest_path]:
         raise DatasetError("manifest changed during admission")
     return DatasetAdmission(root, {"schema": "uci_arena_syzygy_root_dataset_identity_v1", "manifest_sha256": manifest_sha,

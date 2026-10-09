@@ -6,12 +6,13 @@ from pathlib import Path
 import re
 import secrets
 import sys
-from dataset import admit_dataset, regular
+from dataset import admit_dataset, regular, stamp, cancellation_point
 from root_contract import canonical_json
 from root_provider import RootKnowledgeProvider
 from runtime_manifest import admit_runtime
 from service import RootService, TRANSPORT_SCHEMA, TransportError
 from transport import BoundedOutput, read_frame
+from warming import WarmingService
 
 
 class ConfigurationError(ValueError):
@@ -34,6 +35,16 @@ def admit_config(value):
 def serve(provider, source, sink):
     output = BoundedOutput(sink)
     service = RootService(provider, output.write)
+    return serve_service(service, provider.generation, source, output)
+
+
+def serve_warming(identity, generation, load, source, sink):
+    output = BoundedOutput(sink)
+    service = WarmingService(identity, generation, load, output.write)
+    return serve_service(service, generation, source, output)
+
+
+def serve_service(service, generation, source, output):
     code = 0
     try:
         while True:
@@ -47,7 +58,7 @@ def serve(provider, source, sink):
         code = 2
         try:
             output.write({"schema": TRANSPORT_SCHEMA, "operation": "transport", "status": "error",
-                          "reason": "invalid_transport", "provider_generation": provider.generation})
+                          "reason": "invalid_transport", "provider_generation": generation})
         except TransportError:
             pass
     finally:
@@ -61,13 +72,21 @@ def serve(provider, source, sink):
     return code
 
 
+class OwnedRootProvider(RootKnowledgeProvider):
+    def __init__(self, dataset, identity, generation):
+        super().__init__(dataset, identity, maximum_pieces=dataset.identity['admitted_cardinality'], generation=generation)
+        self.dataset = dataset
+
+    def close(self):
+        self.dataset.close()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
     parser.add_argument("--inventory", required=True)
     parser.add_argument("--expected-manifest-sha256", required=True)
     options = parser.parse_args()
-    dataset = None
     try:
         inventory = Path(options.inventory).absolute()
         if not re.fullmatch(r"[0-9a-f]{64}", options.expected_manifest_sha256) or regular(inventory).st_size > 1048576 or hashlib.sha256(inventory.read_bytes()).hexdigest() != options.expected_manifest_sha256:
@@ -80,22 +99,35 @@ def main():
         path = Path(options.config)
         if not path.is_absolute() or regular(path).st_size > 65536:
             raise ConfigurationError("bounded regular cold configuration required")
+        config_state = stamp(path)
         configuration = admit_config(json.loads(path.read_bytes()))
-        dataset = admit_dataset(configuration["dataset_root"], configuration["selected_files"], configuration["manifest_sha256"])
-        dataset.open()
-        identity["dataset"] = dataset.identity
+        if stamp(path) != config_state:
+            raise ConfigurationError('configuration changed during admission')
         identity["configuration_sha256"] = hashlib.sha256(canonical_json(configuration).encode()).hexdigest()
-        provider = RootKnowledgeProvider(dataset, identity, maximum_pieces=dataset.identity["admitted_cardinality"], generation=secrets.token_hex(16))
-        code = serve(provider, sys.stdin.buffer, sys.stdout.buffer)
-        if code != 3:
-            dataset.close()  # Never close tablebase before outstanding worker drain.
-        return code
-    except Exception:
-        if dataset is not None:
+        generation = secrets.token_hex(16)
+        def load(cancelled):
+            dataset = None
             try:
-                dataset.close()
+                if stamp(path) != config_state:
+                    raise ConfigurationError('configuration changed before dataset admission')
+                dataset = admit_dataset(configuration['dataset_root'], configuration['selected_files'], configuration['manifest_sha256'], cancelled=cancelled)
+                dataset.open(cancelled=cancelled)
+                cancellation_point(cancelled)
+                # Readiness binds the same runtime/configuration before and after
+                # the long cold phase, as well as every admitted dataset member.
+                current = admit_runtime(inventory)
+                if current != {key: value for key, value in identity.items() if key != 'configuration_sha256'} or stamp(path) != config_state:
+                    raise ConfigurationError('cold selection changed before readiness')
+                dataset.check_unchanged()
+                cancellation_point(cancelled)
+                ready_identity = dict(identity, dataset=dataset.identity)
+                return OwnedRootProvider(dataset, ready_identity, generation)
             except Exception:
-                pass  # Failed cleanup stays process-contained; no retry/qualification.
+                if dataset is not None:
+                    dataset.close()  # A failed close propagates quarantine.
+                raise
+        return serve_warming(identity, generation, load, sys.stdin.buffer, sys.stdout.buffer)
+    except Exception:
         print("root provider unavailable: cold admission failed", file=sys.stderr)
         return 2
 

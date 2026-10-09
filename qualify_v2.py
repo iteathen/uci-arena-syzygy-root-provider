@@ -52,6 +52,16 @@ def main():
     try:
         send({"operation": "describe"})
         description = receive()
+        warming = []
+        while description['status'] == 'warming':
+            warming.append(description)
+            if 'dataset' in description['provider_identity'] or description['readiness']['dataset'] != 'not-admitted':
+                raise AssertionError('warming falsely claimed dataset readiness')
+            if len(warming) > 50:
+                raise AssertionError('bounded KQ readiness not reached')
+            time.sleep(.02)
+            send({'operation': 'describe'})
+            description = receive()
         if description["status"] != "ready" or description["provider_identity"]["package"]["manifest_sha256"] != manifest_sha:
             raise AssertionError("actual package readiness mismatch")
         cases = [
@@ -111,11 +121,12 @@ def main():
                 broken.stdin.close()
             broken.stderr.close()
         record = {"schema": "uci_arena_syzygy_root_process_observation_v2", "description": description,
+                  "warming_descriptions": warming,
                   "observations": observations, "process_exit": 0, "owned_worker_and_dataset_closed": True,
                   "broken_output_process": output_failure,
                   "scope": "closed-KQvK-three-piece-subset", "suite_acceptance": False, "vector_consumer_qualification": False,
                   "source_files": {name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
-                                   for name in ["qualify_v2.py", "root_contract.py", "root_provider.py", "dataset.py", "service.py", "transport.py", "runtime_manifest.py", "run_provider.py"]}}
+                                   for name in ["qualify_v2.py", "root_contract.py", "root_provider.py", "dataset.py", "service.py", "transport.py", "warming.py", "runtime_manifest.py", "run_provider.py"]}}
         output.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
         print(json.dumps({"passed": len(observations), "manifest_sha256": manifest_sha,
                           "receipt_sha256": hashlib.sha256(output.read_bytes()).hexdigest(), "suite_acceptance": False}))

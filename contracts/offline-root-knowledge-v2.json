@@ -1,6 +1,6 @@
 {
   "schema": "uci_arena_root_knowledge_contract_v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "state": "unsigned-source-candidate",
   "owner": "offline-root-tablebase-provider",
   "authority": "provider-owned-interface-bytes; original uci_knowledge_sources_v1 1.4 governs result semantics",
@@ -13,7 +13,18 @@
     "maximum_frame_bytes": 262208,
     "maximum_output_bytes": 1048576,
     "output_queue_capacity": 8,
-    "output_queue_byte_capacity": 2097152
+    "output_queue_byte_capacity": 2097152,
+    "cold_lifecycle": {
+      "schema": "uci_arena_root_provider_cold_lifecycle_v1",
+      "describe_statuses": ["warming", "ready", "closed", "draining", "quarantined"],
+      "warming_identity": "admitted-runtime-and-configuration-selection-only",
+      "ready_identity": "complete-exact-selected-dataset-admission",
+      "warming_probe_disposition": "deferred:provider_warming",
+      "cancel_during_warming": true,
+      "ready_notification": false,
+      "hash_chunk_bytes": 65536,
+      "close_worker_join_seconds": 1
+    }
   },
   "request": {
     "schema": "uci_arena_syzygy_root_request_v2",
