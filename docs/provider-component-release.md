@@ -112,6 +112,11 @@ therefore stages exactly three assets in a SAME private repository draft intake:
 the atomic archive and current client/warming receipts. Intake tag is
 `intake/syzygy.root-provider/v2.1.0/windows-x86_64/<full-source-sha>`, target exact
 source SHA; asset IDs, digest, size and exact names are inspected before download.
+GitHub's by-tag endpoint returned404 for the actual private draft. Intake is
+therefore selected uniquely from at most50 authenticated release records, then
+admitted against the exact source and three asset identities. The workflow
+downloads those admitted asset IDs as binary bytes and checks exact size/digest;
+it does not use tag-based download or assume a private draft is public.
 
 Read-only verification runs for pull requests and main pushes. Signing remains
 manual-main-only. The workflow pins checkout/setup-node/Cosign actions and uses
