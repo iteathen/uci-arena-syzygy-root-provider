@@ -22,15 +22,16 @@ def main():
         raise ValueError("explicit package and fresh output required")
     manifest = package / "package-manifest.json"
     manifest_sha = hashlib.sha256(manifest.read_bytes()).hexdigest()
-    process = subprocess.Popen([str(package / "python/python.exe"), "-I", "-B", str(package / "app/run_provider.py"),
-                                "--config", options.config, "--inventory", str(manifest), "--expected-manifest-sha256", manifest_sha],
-                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen([str(package / "python/python.exe"), "-I", "-B", "app/run_provider.py",
+                                "--config", options.config, "--inventory", "package-manifest.json", "--expected-manifest-sha256", manifest_sha],
+                               cwd=package, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     events = queue.Queue(maxsize=8)
     def read():
         try:
             while True:
                 line = process.stdout.readline(1048577)
                 if not line:
+                    events.put(RuntimeError("public provider stdout closed before expected frame"), timeout=2)
                     return
                 if len(line) > 1048576:
                     raise ValueError("output capacity")
@@ -88,9 +89,9 @@ def main():
             raise AssertionError("owned provider did not drain and close")
         # Real OS pipe failure is a separate owned process, never a successful
         # close merely because its output thread has stopped.
-        broken = subprocess.Popen([str(package / "python/python.exe"), "-I", "-B", str(package / "app/run_provider.py"),
-                                   "--config", options.config, "--inventory", str(manifest), "--expected-manifest-sha256", manifest_sha],
-                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        broken = subprocess.Popen([str(package / "python/python.exe"), "-I", "-B", "app/run_provider.py",
+                                   "--config", options.config, "--inventory", "package-manifest.json", "--expected-manifest-sha256", manifest_sha],
+                                  cwd=package, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
             broken.stdout.close()
             broken.stdin.write(b'{"operation":"describe"}\n')

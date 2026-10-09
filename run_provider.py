@@ -69,7 +69,7 @@ def main():
     options = parser.parse_args()
     dataset = None
     try:
-        inventory = Path(options.inventory)
+        inventory = Path(options.inventory).absolute()
         if not re.fullmatch(r"[0-9a-f]{64}", options.expected_manifest_sha256) or regular(inventory).st_size > 1048576 or hashlib.sha256(inventory.read_bytes()).hexdigest() != options.expected_manifest_sha256:
             raise ConfigurationError("package identity mismatch")
         identity = admit_runtime(inventory)
