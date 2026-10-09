@@ -51,10 +51,13 @@ def serve(provider, source, sink):
         except TransportError:
             pass
     finally:
-        if not service.close(1):
-            code = 3  # Native/file call drain not complete; caller must contain process.
-        if not output.close(1):
-            code = 3
+        service.close(1)
+        output.close(1)
+        worker, writer = service.close_disposition, output.close_disposition
+        if not worker["drained"] or not writer["drained"]:
+            code = 3  # Incomplete drain: preserve owner, contain process.
+        elif worker["failed"] or writer["failed"]:
+            code = 4  # Drained failure is quarantine, never successful close.
     return code
 
 

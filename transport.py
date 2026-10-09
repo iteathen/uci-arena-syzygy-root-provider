@@ -77,4 +77,12 @@ class BoundedOutput:
             self._closed = True
             self._condition.notify_all()
         self._worker.join(seconds)
-        return not self._worker.is_alive()
+        outcome = self.close_disposition
+        return outcome["drained"] and not outcome["failed"]
+
+    @property
+    def close_disposition(self):
+        with self._condition:
+            drained, failed = not self._worker.is_alive(), self._failed
+            return {"drained": drained, "failed": failed,
+                    "status": "quarantined" if failed else "closed" if drained else "draining"}

@@ -107,7 +107,8 @@ class ServiceTests(unittest.TestCase):
             with self.assertRaises(TransportError):
                 service.handle({"operation": "probe", "request": request()})
         finally:
-            self.assertTrue(service.close(1))
+            self.assertFalse(service.close(1))
+            self.assertEqual(service.close_disposition, {"drained": True, "failed": True, "status": "quarantined"})
 
     def test_unknown_operation_or_path_injection_never_dispatches(self):
         class Provider:

@@ -86,8 +86,32 @@ def main():
         terminal = receive()
         if terminal["status"] != "closed" or process.wait(timeout=3) != 0:
             raise AssertionError("owned provider did not drain and close")
+        # Real OS pipe failure is a separate owned process, never a successful
+        # close merely because its output thread has stopped.
+        broken = subprocess.Popen([str(package / "python/python.exe"), "-I", "-B", str(package / "app/run_provider.py"),
+                                   "--config", options.config, "--inventory", str(manifest), "--expected-manifest-sha256", manifest_sha],
+                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            broken.stdout.close()
+            broken.stdin.write(b'{"operation":"describe"}\n')
+            broken.stdin.flush()
+            broken.stdin.close()
+            failure_code = broken.wait(timeout=5)
+            stderr = broken.stderr.read(8193)
+            if failure_code == 0 or len(stderr) > 8192:
+                raise AssertionError("broken output was incorrectly reported successful")
+            output_failure = {"observed_exit_code": failure_code, "forced_shutdown": False,
+                              "consumer_closed_stdout": True, "stderr_bytes": len(stderr),
+                              "successful_close": False, "individual_dataset_close_observed": False}
+        finally:
+            if broken.poll() is None:
+                broken.kill(); broken.wait(timeout=3)
+            if not broken.stdin.closed:
+                broken.stdin.close()
+            broken.stderr.close()
         record = {"schema": "uci_arena_syzygy_root_process_observation_v2", "description": description,
                   "observations": observations, "process_exit": 0, "owned_worker_and_dataset_closed": True,
+                  "broken_output_process": output_failure,
                   "scope": "closed-KQvK-three-piece-subset", "suite_acceptance": False, "vector_consumer_qualification": False,
                   "source_files": {name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
                                    for name in ["qualify_v2.py", "root_contract.py", "root_provider.py", "dataset.py", "service.py", "transport.py", "runtime_manifest.py", "run_provider.py"]}}

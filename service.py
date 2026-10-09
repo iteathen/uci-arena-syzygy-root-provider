@@ -55,8 +55,8 @@ class RootService:
             self._send(self.describe())
             return
         if operation == "close":
-            complete = self.close(1)
-            self._send({"schema": TRANSPORT_SCHEMA, "operation": "close", "status": "closed" if complete else "draining", "provider_generation": self.provider.generation})
+            self.close(1)
+            self._send({"schema": TRANSPORT_SCHEMA, "operation": "close", **self.close_disposition, "provider_generation": self.provider.generation})
             return
         if operation == "cancel":
             if not isinstance(message["request_id"], str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", message["request_id"]) or not isinstance(message["root_fence"], str) or not re.fullmatch(r"[0-9a-f]{32}", message["root_fence"]):
@@ -152,4 +152,12 @@ class RootService:
                 ticket["cancelled"].set()
             self._condition.notify_all()
         self._worker.join(seconds)
-        return not self._worker.is_alive()
+        outcome = self.close_disposition
+        return outcome["drained"] and not outcome["failed"]
+
+    @property
+    def close_disposition(self):
+        with self._condition:
+            drained, failed = not self._worker.is_alive(), self._failed
+            return {"drained": drained, "failed": failed,
+                    "status": "quarantined" if failed else "closed" if drained else "draining"}

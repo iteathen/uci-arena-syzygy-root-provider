@@ -51,7 +51,8 @@ class TransportTests(unittest.TestCase):
         output = BoundedOutput(FailedPipe())
         output.write({"sequence": 0})
         self.assertTrue(failed.wait(1))
-        self.assertTrue(output.close(2))
+        self.assertFalse(output.close(2))
+        self.assertEqual(output.close_disposition, {"drained": True, "failed": True, "status": "quarantined"})
         with self.assertRaises(TransportError):
             output.write({"sequence": 1})
 
