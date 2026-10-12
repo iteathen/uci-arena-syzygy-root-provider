@@ -49,8 +49,8 @@ premises:
     confidence: 0.99
   - id: S-P5
     statement: >
-      Bounded process transport and cancellation are preferable to hidden engine coupling
-      because the knowledge provider is independently replaceable.
+      The root-knowledge provider is independently replaceable; hidden engine coupling would
+      merge otherwise separate lifecycles and increase substitution and change radius.
     confidence: 0.97
 
   - id: S-P6
