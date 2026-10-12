@@ -9,7 +9,7 @@ global_graph:
 
 imports:
   objectives: [G-O1, G-O2]
-  premises: [G-P4, G-P6, G-P10, G-P11, G-P12, G-P17, G-P20, G-P21, G-P23]
+  premises: [G-P4, G-P6, G-P10, G-P11, G-P12, G-P17, G-P20, G-P21, G-P23, G-P27, G-P28]
   targets: [G-T1, G-T4, G-T5, G-T6, G-T8, G-T10, G-T12]
 
 local_objectives:
@@ -104,6 +104,14 @@ implicit_assertions:
     derived_from: [S-P6]
     confidence: 0.99
 
+  - id: S-A7
+    statement: >
+      Qualification over a closed three-piece or otherwise narrow dataset subset cannot be
+      promoted into broad six-piece coverage, performance, or live-engine acceptance without
+      evidence for that wider scope.
+    derived_from: [S-P6, G-P28]
+    confidence: 0.999
+
 implementation_targets:
   - {id: S-T1, name: exact_dataset_and_package_identity, supports: [S-O1, G-T1]}
   - {id: S-T2, name: bounded_history_and_rule_admission, supports: [S-O1, G-T1]}
@@ -116,7 +124,7 @@ implementation_targets:
   - {id: S-T9, name: truthful_capacity_and_missing_evidence_status, supports: [G-T4, G-T9]}
 
 target_derivations:
-  S-T1: [S-O1, S-O2, S-P1, S-P4, S-P6]
+  S-T1: [S-O1, S-O2, S-P1, S-P4, S-P6, G-P27, G-P28]
   S-T2: [S-O1, S-P1, S-P4]
   S-T3: [S-O1, S-P1, S-P3, S-P6]
   S-T4: [S-O1, S-P1, S-P3, S-P4, S-P6]
@@ -133,6 +141,7 @@ assertion_relevance:
   S-A4: [S-T1, S-T8]
   S-A5: [S-T3, S-T4, S-T9]
   S-A6: [S-T3, S-T4, S-T9]
+  S-A7: [S-T1, S-T3, S-T4, S-T9]
 
 dominance_relations:
   - {id: S-D1, stronger: S-T1, weaker: S-T6, context: transport_convenience_would_accept_unverified_dataset_or_package, confidence: 0.999, consequence: critical}
