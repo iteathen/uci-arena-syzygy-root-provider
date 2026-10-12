@@ -6,6 +6,16 @@ it owns its Python process/runtime inventory and atomic Installer component.
 Vector owns canonical chess/GPU search/model state and consumes this provider
 only through the frozen public locator/JSON-lines contracts.
 
+## Decision reasoning
+
+Before a substantive architecture, design, implementation-selection, or cross-component
+decision, read `reasoning/component_graph_v1.yaml` and the canonical suite graph at
+`iteathen/uci-arena-installer/reasoning/suite_graph_v1.yaml`.
+
+The provider's local reasoning remains root-knowledge-only. Accepted provider contracts and
+the explicit ownership restrictions below remain behavior authority; the reasoning graph
+cannot promote tablebase knowledge into engine search, legality, or timing authority.
+
 The owner-selected runtime source is c254e225219f4805f3997e967000b4d802556282.
 Do not alter the54-file inner package or historical qualification meanings as
 part of packaging. No active-leaf callback, remote data probing, engine search,
