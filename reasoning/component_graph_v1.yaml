@@ -11,7 +11,7 @@ global_graph:
 imports:
   objectives: [G-O1, G-O2]
   premises: [G-P4, G-P6, G-P10, G-P17, G-P20, G-P21, G-P23, G-P27, G-P28]
-  targets: [G-T1, G-T4, G-T5, G-T6, G-T8, G-T10, G-T12]
+  targets: [G-T1, G-T4, G-T5, G-T6, G-T8, G-T9, G-T10, G-T12]
 
 local_objectives:
   - id: S-O1
@@ -109,8 +109,8 @@ implicit_assertions:
     confidence: 0.995
   - id: S-A6
     statement: >
-      Provider unavailability or incomplete local coverage must be reported as capability
-      state rather than evidence that no exact root solution exists.
+      Provider unavailability or incomplete local coverage establishes a limitation of local
+      capability, not evidence that no exact root solution exists.
     derived_from: [S-P6]
     confidence: 0.99
 
