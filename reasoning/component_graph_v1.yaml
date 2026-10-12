@@ -1,0 +1,108 @@
+schema: uci_arena_component_reasoning_graph_v1
+graph_id: uci_arena_syzygy_root_provider
+version: 1
+status: initial_owner_directed
+component: syzygy.root-provider
+global_graph:
+  repository: iteathen/uci-arena-installer
+  path: reasoning/suite_graph_v1.yaml
+
+imports:
+  objectives: [G-O1, G-O2]
+  premises: [G-P4, G-P6, G-P10, G-P11]
+  targets: [G-T1, G-T4, G-T5, G-T6, G-T8, G-T10, G-T12]
+
+local_objectives:
+  - id: S-O1
+    statement: >
+      Supply exact offline root tablebase knowledge that improves or constrains engine chess
+      decisions without becoming a competing search, legality, or timing authority.
+    derived_from: [G-O1, G-T1]
+    confidence: 0.995
+  - id: S-O2
+    statement: >
+      Make exact root knowledge a bounded, replaceable external capability that can be
+      installed and consumed without embedding tablebase implementation into the engine.
+    derived_from: [G-O2, G-T5, G-T12]
+    confidence: 0.97
+
+premises:
+  - id: S-P1
+    statement: >
+      Syzygy WDL/DTZ knowledge is exact only inside the admitted dataset/rule/history scope;
+      missing required history or data cannot be replaced by optimistic inference.
+    confidence: 0.995
+  - id: S-P2
+    statement: >
+      The provider owns offline root knowledge access while Vector owns canonical chess state,
+      legal actions, search, model semantics, and live timing.
+    confidence: 0.999
+  - id: S-P3
+    statement: >
+      Root-only knowledge can resolve or safely constrain a current move without requiring
+      active-leaf callbacks into ongoing search.
+    confidence: 0.98
+  - id: S-P4
+    statement: >
+      Draw-claim policy, repetition history, dataset identity, and exact package/runtime
+      identity can materially change the meaning of a root tablebase result.
+    confidence: 0.99
+  - id: S-P5
+    statement: >
+      Bounded process transport and cancellation are preferable to hidden engine coupling
+      because the knowledge provider is independently replaceable.
+    confidence: 0.97
+
+implicit_assertions:
+  - id: S-A1
+    statement: >
+      A tablebase result outside its exact admitted history/dataset/rule scope is not made
+      authoritative merely because the underlying position has few pieces.
+    derived_from: [S-P1, S-P4, G-P6]
+    confidence: 0.999
+  - id: S-A2
+    statement: >
+      Adding active-leaf or timing callbacks would change the provider from root knowledge
+      into search infrastructure and violate the intended ownership boundary.
+    derived_from: [S-P2, S-P3]
+    confidence: 0.995
+  - id: S-A3
+    statement: >
+      A virtual draw claim or deferred refinement cannot be relabeled as an exact legal move.
+    derived_from: [S-P1, S-P4]
+    confidence: 0.999
+  - id: S-A4
+    statement: >
+      Dataset/package provenance is part of chess-result truth because a stale or incomplete
+      file set can change which exact claims are supported.
+    derived_from: [S-P1, G-P6]
+    confidence: 0.98
+
+implementation_targets:
+  - {id: S-T1, name: exact_dataset_and_package_identity, supports: [S-O1, G-T1]}
+  - {id: S-T2, name: bounded_history_and_rule_admission, supports: [S-O1, G-T1]}
+  - {id: S-T3, name: complete_raw_wdl_root_safety, supports: [S-O1]}
+  - {id: S-T4, name: exact_or_truthfully_deferred_refinement, supports: [S-O1, G-T4]}
+  - {id: S-T5, name: exact_draw_claim_semantics, supports: [S-O1, G-T1]}
+  - {id: S-T6, name: cancellable_bounded_json_lines_transport, supports: [S-O2, G-T8]}
+  - {id: S-T7, name: no_active_leaf_search_or_timing_authority, supports: [S-O1, G-T6]}
+  - {id: S-T8, name: immutable_relocatable_provider_package, supports: [S-O2, G-T12]}
+  - {id: S-T9, name: truthful_capacity_and_missing_evidence_status, supports: [G-T4, G-T9]}
+
+dominance_relations:
+  - {id: S-D1, stronger: S-T1, weaker: S-T6, context: transport_convenience_would_accept_unverified_dataset_or_package, confidence: 0.999, consequence: critical}
+  - {id: S-D2, stronger: S-T2, weaker: S-T4, context: refinement_would_ignore_required_history_or_rule_context, confidence: 0.999, consequence: critical}
+  - {id: S-D3, stronger: S-T7, weaker: S-T4, context: stronger_refinement_would_require_provider_to_enter_active_search, confidence: 0.995, consequence: major}
+  - {id: S-D4, stronger: S-T9, weaker: S-T4, context: unavailable_exact_evidence_would_be_reported_as_resolved, confidence: 0.999, consequence: critical}
+
+importance_relations:
+  - {id: S-I1, more_important: S-T4, less_important: S-T6, context: admitted_exact_root_where_refinement_changes_move_choice, confidence: 0.9}
+  - {id: S-I2, more_important: S-T6, less_important: S-T4, context: refinement_is_optional_and_transport_latency_threatens_usability, confidence: 0.82}
+
+exports:
+  - id: S-X1
+    statement: exact current-root safety constraint or exact resolved root move within admitted scope
+    supports_global: [G-T1, G-T6]
+  - id: S-X2
+    statement: explicit deferred unavailable or insufficient root-knowledge status
+    supports_global: [G-T4, G-T9]
