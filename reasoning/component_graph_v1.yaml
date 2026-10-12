@@ -3,13 +3,14 @@ graph_id: uci_arena_syzygy_root_provider
 version: 1
 status: initial_owner_directed
 component: syzygy.root-provider
+concern_areas: [C01, C03, C04, C05, C08, C09, C12]
 global_graph:
   repository: iteathen/uci-arena-installer
   path: reasoning/suite_graph_v1.yaml
 
 imports:
   objectives: [G-O1, G-O2]
-  premises: [G-P4, G-P6, G-P10, G-P11, G-P12, G-P17, G-P20, G-P21, G-P23, G-P27, G-P28]
+  premises: [G-P4, G-P6, G-P10, G-P17, G-P20, G-P21, G-P23, G-P27, G-P28]
   targets: [G-T1, G-T4, G-T5, G-T6, G-T8, G-T10, G-T12]
 
 local_objectives:
@@ -65,6 +66,15 @@ premises:
       condition and can change downstream move choice, clock use, and search workload.
     confidence: 0.99
 
+premise_metadata:
+  S-P1: {kind: structural}
+  S-P2: {kind: structural}
+  S-P3: {kind: structural}
+  S-P4: {kind: structural}
+  S-P5: {kind: structural}
+  S-P6: {kind: structural}
+  S-P7: {kind: structural}
+
 implicit_assertions:
   - id: S-A1
     statement: >
@@ -112,16 +122,81 @@ implicit_assertions:
     derived_from: [S-P6, G-P28]
     confidence: 0.999
 
+assertion_metadata:
+  S-A1: {inference: structural, boundary: "Few-piece status alone is neither necessary nor sufficient authority; exact admitted coverage/context remains decisive."}
+  S-A2: {inference: structural, boundary: "The provider may perform bounded root refinement; the boundary excludes ownership of ongoing search policy/timing."}
+  S-A3: {inference: structural, boundary: "Claim-related information can still constrain or inform search without becoming an exact move."}
+  S-A4: {inference: structural, boundary: "Package provenance supports exact scope but does not alone prove tablebase chess semantics or broad coverage."}
+  S-A5: {inference: structural, boundary: "Changing tablebase availability is valid when it is the declared experimental treatment."}
+  S-A6: {inference: structural, boundary: "Unavailability of the provider does not imply absence of mathematical tablebase truth; it is an operational capability fact."}
+  S-A7: {inference: structural, boundary: "Narrow qualification remains valid for the narrow dataset/cases it actually exercised."}
+
 implementation_targets:
-  - {id: S-T1, name: exact_dataset_and_package_identity, supports: [S-O1, G-T1]}
-  - {id: S-T2, name: bounded_history_and_rule_admission, supports: [S-O1, G-T1]}
-  - {id: S-T3, name: complete_raw_wdl_root_safety, supports: [S-O1]}
-  - {id: S-T4, name: exact_or_truthfully_deferred_refinement, supports: [S-O1, G-T4]}
-  - {id: S-T5, name: exact_draw_claim_semantics, supports: [S-O1, G-T1]}
-  - {id: S-T6, name: cancellable_bounded_json_lines_transport, supports: [S-O2, G-T8]}
-  - {id: S-T7, name: no_active_leaf_search_or_timing_authority, supports: [S-O1, G-T6]}
-  - {id: S-T8, name: immutable_relocatable_provider_package, supports: [S-O2, G-T12]}
-  - {id: S-T9, name: truthful_capacity_and_missing_evidence_status, supports: [G-T4, G-T9]}
+  - id: S-T1
+    name: establish_exact_root_knowledge_identity_and_coverage
+    statement: >
+      Identify the exact tablebase data, provider/runtime identity, and supported position
+      scope required to interpret a root-knowledge result.
+    supports: [S-O1, G-T1]
+  - id: S-T2
+    name: apply_root_knowledge_only_under_sufficient_rule_and_history_context
+    statement: >
+      Admit root tablebase meaning only when the rule, history, draw-claim, and state context
+      required by that meaning is available and compatible.
+    supports: [S-O1, G-T1]
+  - id: S-T3
+    name: provide_complete_exact_root_safety_information_when_available
+    statement: >
+      Return exact root outcome/safety information over the admitted available dataset without
+      silently narrowing or fabricating coverage.
+    supports: [S-O1]
+  - id: S-T4
+    name: refine_exactly_or_defer_truthfully
+    statement: >
+      Improve root knowledge when exact supporting information is available and otherwise
+      preserve completed safe information while reporting refinement as deferred/unavailable.
+    supports: [S-O1, G-T4]
+  - id: S-T5
+    name: preserve_exact_draw_claim_terminal_and_move_meaning
+    statement: >
+      Keep claims, adjudicated terminal outcomes, constraints, and exact legal-move resolution
+      semantically distinct.
+    supports: [S-O1, G-T1]
+  - id: S-T6
+    name: keep_provider_interaction_bounded_cancellable_and_replaceable
+    statement: >
+      Expose root knowledge through bounded, cancellable interaction whose failure or
+      replacement does not entangle engine search lifecycle.
+    supports: [S-O2, G-T8]
+  - id: S-T7
+    name: remain_root_knowledge_without_acquiring_search_or_timing_authority
+    statement: >
+      Provide external root information without becoming an owner of active-leaf search,
+      canonical engine state, move selection, or live timing policy.
+    supports: [S-O1, G-T6]
+  - id: S-T8
+    name: remain_independently_deployable_and_relocatable
+    statement: >
+      Package and deploy the provider as a self-contained replaceable capability without
+      requiring private source-tree or engine-layout coupling.
+    supports: [S-O2, G-T12]
+  - id: S-T9
+    name: report_root_knowledge_capability_truthfully
+    statement: >
+      Distinguish exact result, constrained result, deferred refinement, missing coverage,
+      capacity pressure, and provider unavailability without optimistic substitution.
+    supports: [G-T4, G-T9]
+
+target_semantics:
+  status: problem_characterized
+  solution_selected_by_reasoning_graph: false
+
+causal_relations:
+  - {id: S-C1, cause: S-T1, effect: S-T3, relation: necessary_condition, confidence: 0.995}
+  - {id: S-C2, cause: S-T2, effect: S-T3, relation: necessary_condition, confidence: 0.995}
+  - {id: S-C3, cause: S-T3, effect: S-T4, relation: safe_refinement_base, confidence: 0.94}
+  - {id: S-C4, cause: S-T5, effect: S-T3, relation: semantic_validity_preserver, confidence: 0.99}
+  - {id: S-C5, cause: S-T9, effect: G-T4, relation: evidence_truth_enabler, confidence: 0.97}
 
 target_derivations:
   S-T1: [S-O1, S-O2, S-P1, S-P4, S-P6, G-P27, G-P28]
@@ -131,7 +206,7 @@ target_derivations:
   S-T5: [S-O1, S-P1, S-P4]
   S-T6: [S-O2, S-P5, G-P20]
   S-T7: [S-O1, S-O2, S-P2, S-P3, G-P23]
-  S-T8: [S-O2, S-P5, G-P12, G-P21]
+  S-T8: [S-O2, S-P5, G-P21]
   S-T9: [S-O1, S-P6, G-P20]
 
 assertion_relevance:
@@ -144,10 +219,10 @@ assertion_relevance:
   S-A7: [S-T1, S-T3, S-T4, S-T9]
 
 dominance_relations:
-  - {id: S-D1, stronger: S-T1, weaker: S-T6, context: transport_convenience_would_accept_unverified_dataset_or_package, confidence: 0.999, consequence: critical}
-  - {id: S-D2, stronger: S-T2, weaker: S-T4, context: refinement_would_ignore_required_history_or_rule_context, confidence: 0.999, consequence: critical}
-  - {id: S-D3, stronger: S-T7, weaker: S-T4, context: stronger_refinement_would_require_provider_to_enter_active_search, confidence: 0.995, consequence: major}
-  - {id: S-D4, stronger: S-T9, weaker: S-T4, context: unavailable_exact_evidence_would_be_reported_as_resolved, confidence: 0.999, consequence: critical}
+  - {id: S-D1, stronger: S-T1, weaker: S-T6, context: transport_convenience_would_accept_unverified_dataset_or_package, strength: strict_necessary_condition, basis: [S-P1, S-P4, S-A4], confidence: 0.999, consequence: critical}
+  - {id: S-D2, stronger: S-T2, weaker: S-T4, context: refinement_would_ignore_required_history_or_rule_context, strength: strict_necessary_condition, basis: [S-P1, S-P4, S-A1], confidence: 0.999, consequence: critical}
+  - {id: S-D3, stronger: S-T7, weaker: S-T4, context: stronger_refinement_would_require_provider_to_enter_active_search, strength: strict_necessary_condition, basis: [S-P2, S-P3, S-A2], confidence: 0.995, consequence: major}
+  - {id: S-D4, stronger: S-T9, weaker: S-T4, context: unavailable_exact_evidence_would_be_reported_as_resolved, strength: strict_necessary_condition, basis: [S-P6, S-A6, S-A7], confidence: 0.999, consequence: critical}
 
 importance_relations:
   - {id: S-I1, more_important: S-T4, less_important: S-T6, context: admitted_exact_root_where_refinement_changes_move_choice, confidence: 0.9}
