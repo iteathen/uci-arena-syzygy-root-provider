@@ -53,6 +53,18 @@ premises:
       because the knowledge provider is independently replaceable.
     confidence: 0.97
 
+  - id: S-P6
+    statement: >
+      Tablebase availability and exactness are properties of the admitted dataset coverage,
+      rule/history context, and provider capability; a missing or partial local dataset does
+      not imply that the chess position has no exact tablebase truth in principle.
+    confidence: 0.99
+  - id: S-P7
+    statement: >
+      Enabling or disabling root tablebase knowledge changes the engine's experimental
+      condition and can change downstream move choice, clock use, and search workload.
+    confidence: 0.99
+
 implicit_assertions:
   - id: S-A1
     statement: >
@@ -78,6 +90,20 @@ implicit_assertions:
     derived_from: [S-P1, G-P6]
     confidence: 0.98
 
+  - id: S-A5
+    statement: >
+      A search or timing comparison that changes tablebase availability between cohorts cannot
+      cleanly attribute the result to search/timing quality unless tablebase difference is the
+      declared treatment.
+    derived_from: [S-P7, G-P17, G-P21]
+    confidence: 0.995
+  - id: S-A6
+    statement: >
+      Provider unavailability or incomplete local coverage must be reported as capability
+      state rather than evidence that no exact root solution exists.
+    derived_from: [S-P6]
+    confidence: 0.99
+
 implementation_targets:
   - {id: S-T1, name: exact_dataset_and_package_identity, supports: [S-O1, G-T1]}
   - {id: S-T2, name: bounded_history_and_rule_admission, supports: [S-O1, G-T1]}
@@ -88,6 +114,25 @@ implementation_targets:
   - {id: S-T7, name: no_active_leaf_search_or_timing_authority, supports: [S-O1, G-T6]}
   - {id: S-T8, name: immutable_relocatable_provider_package, supports: [S-O2, G-T12]}
   - {id: S-T9, name: truthful_capacity_and_missing_evidence_status, supports: [G-T4, G-T9]}
+
+target_derivations:
+  S-T1: [S-O1, S-O2, S-P1, S-P4, S-P6]
+  S-T2: [S-O1, S-P1, S-P4]
+  S-T3: [S-O1, S-P1, S-P3, S-P6]
+  S-T4: [S-O1, S-P1, S-P3, S-P4, S-P6]
+  S-T5: [S-O1, S-P1, S-P4]
+  S-T6: [S-O2, S-P5, G-P20]
+  S-T7: [S-O1, S-O2, S-P2, S-P3, G-P23]
+  S-T8: [S-O2, S-P5, G-P12, G-P21]
+  S-T9: [S-O1, S-P6, G-P20]
+
+assertion_relevance:
+  S-A1: [S-T1, S-T2, S-T3, S-T4, S-T5]
+  S-A2: [S-T4, S-T7]
+  S-A3: [S-T4, S-T5, S-T9]
+  S-A4: [S-T1, S-T8]
+  S-A5: [S-T3, S-T4, S-T9]
+  S-A6: [S-T3, S-T4, S-T9]
 
 dominance_relations:
   - {id: S-D1, stronger: S-T1, weaker: S-T6, context: transport_convenience_would_accept_unverified_dataset_or_package, confidence: 0.999, consequence: critical}
